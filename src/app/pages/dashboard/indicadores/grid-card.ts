@@ -1,4 +1,4 @@
-import { Component, Input, input, computed } from '@angular/core';
+import { Component, Input, input, computed, output } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
@@ -51,21 +51,32 @@ export interface ColumnDef {
                             {{ col.header }}
                             <p-sortIcon [field]="col.field"></p-sortIcon>
                         </th>
+                        @if (actionIcon) {
+                            <th style="width:3.5rem"></th>
+                        }
                     </tr>
                 </ng-template>
                 <ng-template #body let-row>
                     <tr>
                         <td *ngFor="let col of columns">{{ formatValue(row[col.field], col.format) }}</td>
+                        @if (actionIcon) {
+                            <td style="text-align:center; padding:0.25rem">
+                                <button pButton [icon]="actionIcon" size="small" [text]="true" severity="info" (click)="rowAction.emit(row)" [title]="actionLabel"></button>
+                            </td>
+                        }
                     </tr>
                 </ng-template>
                 <ng-template #footer>
                     <tr *ngIf="footerRow()" style="font-weight:600; background:var(--p-surface-100)">
                         <td *ngFor="let col of columns">{{ formatValue(footerRow()![col.field], col.format) }}</td>
+                        @if (actionIcon) {
+                            <td></td>
+                        }
                     </tr>
                 </ng-template>
                 <ng-template #emptymessage>
                     <tr>
-                        <td [attr.colspan]="columns.length" class="text-center text-surface-400 py-6">Sin datos</td>
+                        <td [attr.colspan]="columns.length + (actionIcon ? 1 : 0)" class="text-center text-surface-400 py-6">Sin datos</td>
                     </tr>
                 </ng-template>
             </p-table>
@@ -75,6 +86,9 @@ export interface ColumnDef {
 export class GridCard {
     @Input() title: string = 'Indicador';
     @Input() columns: ColumnDef[] = [];
+    @Input() actionIcon: string = '';
+    @Input() actionLabel: string = '';
+    rowAction = output<any>();
 
     tableDataInput = input<any[]>([]);
     footerRow = input<Record<string, any> | null>(null);

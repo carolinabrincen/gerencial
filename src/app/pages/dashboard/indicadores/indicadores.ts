@@ -10,6 +10,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
+import { DialogModule } from 'primeng/dialog';
+import { TableModule } from 'primeng/table';
 import { dataUDN } from '@/app/types/data-udn';
 import { dataOperaciones } from '@/app/types/data-operaciones';
 import { dataPeriodos } from '@/app/types/data-periodos';
@@ -17,7 +19,7 @@ import { dataPeriodos } from '@/app/types/data-periodos';
 @Component({
     selector: 'app-dashboard-indicadores',
     standalone: true,
-    imports: [GridCard, CommonModule, InputTextModule, IconFieldModule, InputIconModule, MultiSelectModule, FormsModule, ButtonModule, SelectModule],
+    imports: [GridCard, CommonModule, InputTextModule, IconFieldModule, InputIconModule, MultiSelectModule, FormsModule, ButtonModule, SelectModule, DialogModule, TableModule],
     template: `
         <div class="card mb-4">
             <div class="font-semibold text-xl mb-4">Indicadores</div>
@@ -108,9 +110,56 @@ import { dataPeriodos } from '@/app/types/data-periodos';
                     [columns]="colsDisponibilidad"
                     [tableDataInput]="dataDisponibilidad()"
                     [footerRow]="footerDisponibilidad()"
+                    actionIcon="pi pi-list"
+                    actionLabel="Ver detalle"
+                    (rowAction)="openDetalle($event)"
                 />
             </div>
         </div>
+
+        <p-dialog
+            [(visible)]="dialogVisible"
+            [modal]="true"
+            [draggable]="false"
+            [resizable]="false"
+            [style]="dialogStyle"
+            [header]="'Detalle Disponibilidad — ' + (selectedDisponibilidadRow?.mes ?? '')"
+        >
+            <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12">
+                    <div class="font-semibold text-base mb-2">Detalle Mensual</div>
+                    <div class="overflow-x-auto">
+                    <p-table
+                        [value]="selectedDisponibilidadRow?.detalleMensual ?? []"
+                        [tableStyle]="{ 'font-size': '0.875rem' }"
+                        styleClass="p-datatable-sm"
+                    >
+                        <ng-template #header>
+                            <tr>
+                                <th *ngFor="let col of colsDetalleMensual" [style.font-size]="isDayCol(col) ? '0.75rem' : null" style="white-space:nowrap; text-align:center">{{ col.header }}</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-row>
+                            <tr>
+                                <td *ngFor="let col of colsDetalleMensual" [style.font-size]="isDayCol(col) ? '0.75rem' : null" style="text-align:center">{{ row[col.field] ?? '' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #footer>
+                            <tr *ngIf="(selectedDisponibilidadRow?.detalleMensual?.length ?? 0) > 0" style="font-weight:600; background:var(--p-surface-100)">
+                                <td *ngFor="let col of colsDetalleMensual" [style.font-size]="isDayCol(col) ? '0.75rem' : null" style="text-align:center">{{ footerDetalleMensual[col.field] ?? '' }}</td>
+                            </tr>
+                            <tr *ngFor="let abRow of (selectedDisponibilidadRow?.altasBajas ?? [])">
+                                <td *ngFor="let col of colsDetalleMensual" [style.font-size]="isDayCol(col) ? '0.75rem' : null" style="text-align:center">{{ abRow[col.field] ?? '' }}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr><td [attr.colspan]="colsDetalleMensual.length || 1" class="text-center text-surface-400 py-6">Sin datos</td></tr>
+                        </ng-template>
+                    </p-table>
+                    </div>
+                </div>
+            </div>
+        </p-dialog>
     `
 })
 export class DashboardIndicadores implements OnInit {
@@ -129,6 +178,52 @@ export class DashboardIndicadores implements OnInit {
     private kilometrosService = inject(KilometrosService);
 
     loading = signal(false);
+
+    dialogVisible = false;
+    selectedDisponibilidadRow: any = null;
+
+    private toColHeader(key: string): string {
+        const match = key.match(/^dia(\d+)$/i);
+        return match ? match[1] : key;
+    }
+
+    get footerDetalleMensual(): Record<string, any> {
+        const data = this.selectedDisponibilidadRow?.detalleMensual;
+        if (!data?.length) return {};
+        const keys = Object.keys(data[0]);
+        const result: Record<string, any> = {};
+        keys.forEach((key, i) => {
+            const nums = data.map((r: any) => Number(r[key])).filter((v: number) => !isNaN(v));
+            result[key] = nums.length === data.length ? nums.reduce((s: number, v: number) => s + v, 0) : (i === 0 ? 'Total' : '');
+        });
+        return result;
+    }
+
+    get sharedDialogColWidth(): string {
+        const n = Math.max(this.colsDetalleMensual.length, this.colsAltasBajas.length, 1);
+        return Math.max(55, Math.floor(980 / n)) + 'px';
+    }
+
+    get dialogStyle(): Record<string, string> {
+        return { width: Math.floor(window.innerWidth * 0.97) + 'px' };
+    }
+
+    get colsDetalleMensual(): ColumnDef[] {
+        const data = this.selectedDisponibilidadRow?.detalleMensual;
+        if (!data?.length) return [];
+        return Object.keys(data[0]).map(key => ({ field: key, header: this.toColHeader(key) }));
+    }
+
+    get colsAltasBajas(): ColumnDef[] {
+        const data = this.selectedDisponibilidadRow?.altasBajas;
+        if (!data?.length) return [];
+        return Object.keys(data[0]).map(key => ({ field: key, header: this.toColHeader(key) }));
+    }
+
+    openDetalle(row: any): void {
+        this.selectedDisponibilidadRow = row;
+        this.dialogVisible = true;
+    }
 
     dataOpActivos = signal<any[]>([]);
     dataKmsXViaje = signal<any[]>([]);
