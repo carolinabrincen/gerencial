@@ -66,7 +66,7 @@ import { OverlayBadge } from 'primeng/overlaybadge';
                     
                     <li>
                         <a pStyleClass="@next" enterFromClass="hidden" enterActiveClass="animate-scalein" leaveToClass="hidden" leaveActiveClass="animate-fadeout" [hideOnOutsideClick]="true" class="flex items-center gap-2">
-                            <img src="/demo/images/avatar/amyelsner.png" alt="avatar" class="w-8 h-8" />
+                            <img src="demo/images/avatar/amyelsner.png" alt="avatar" class="w-8 h-8" />
                            
                         </a>
                         <div class="hidden">

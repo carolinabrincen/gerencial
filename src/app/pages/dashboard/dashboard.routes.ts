@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 export default [
-    { path: '', redirectTo: 'analytics', pathMatch: 'full' },
+    { path: '', redirectTo: 'indicadores', pathMatch: 'full' },
     { path: 'analytics', data: { breadcrumb: 'Analytics Dashboard' }, loadComponent: () => import('./analytics/dashboardanalytics').then((c) => c.DashboardAnalytics) },
     { path: 'indicadores', data: { breadcrumb: 'Indicadores' }, loadComponent: () => import('./indicadores/indicadores').then((c) => c.DashboardIndicadores) },
     { path: 'sales', data: { breadcrumb: 'Sales Dashboard' }, loadComponent: () => import('./sales/dashboardsales').then((c) => c.DashboardSales) },

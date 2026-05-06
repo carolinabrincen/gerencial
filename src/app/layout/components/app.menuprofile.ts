@@ -11,7 +11,7 @@ import { AuthService } from '@/app/services/auth.service';
     standalone: true,
     imports: [CommonModule, TooltipModule, ButtonModule, RouterModule],
     template: `<button (click)="toggleMenu()" pTooltip="Profile" [tooltipDisabled]="isTooltipDisabled()" class="cursor-pointer">
-            <img src="/demo/images/avatar/amyelsner.png" alt="avatar" style="width: 32px; height: 32px;" />
+            <img src="demo/images/avatar/amyelsner.png" alt="avatar" style="width: 32px; height: 32px;" />
             <span class="text-start">
                 <strong>{{ authService.getUser()?.idUsuario }}</strong>
             </span>

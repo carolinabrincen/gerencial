@@ -680,7 +680,7 @@ export class DashboardIndicadores implements OnInit {
     trendKmsVacios = computed((): 'up' | 'down' | '' => {
         const footer = this.footerKmsVacios();
         if (!footer) return '';
-        return footer.kmsVacios > footer.mesAnt ? 'up' : 'down';
+        return footer.kmsVacios < footer.mesAnt ? 'up' : 'down';
     });
 
     subtitleKmsXViaje = computed(() => {
@@ -820,6 +820,19 @@ export class DashboardIndicadores implements OnInit {
     }
 
     buscar(): void {
+
+         this.dataOpActivos.set([]);
+                    this.dataKmsXViaje.set([]);
+                    this.dataKmsVacios.set([]);
+                    this.dataViajesMes.set([]);
+                    this.dataDisponibilidad.set([]);
+                    this.dataIR6.set([]);
+                    this.dataIR7.set([]);
+                    this.dataIR8.set([]);
+                    this.dataIR9.set([]);
+                    this.dataIR10.set([]);
+    
+
         const udnNames = this.selectedUDN
             .map(id => this.udnOptions.find(u => u.idUdN === id)?.UdN ?? '')
             .filter(name => name !== '');

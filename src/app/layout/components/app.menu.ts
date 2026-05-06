@@ -38,25 +38,11 @@ export class AppMenu implements OnInit {
                 icon: 'pi pi-home',
                 path: '/dashboards',
                 items: [
-                    {
-                        label: 'Analytics Dashboard',
-                        icon: 'pi pi-fw pi-chart-pie',
-                        routerLink: ['/dashboards/analytics']
-                    },
+                    
                     {
                         label: 'Indicadores',
                         icon: 'pi pi-fw pi-chart-bar',
                         routerLink: ['/dashboards/indicadores']
-                    },
-                    {
-                        label: 'Sales Dashboard',
-                        icon: 'pi pi-fw pi-home',
-                        routerLink: ['/dashboards/sales']
-                    },
-                    {
-                        label: 'SaaS Dashboard',
-                        icon: 'pi pi-fw pi-bolt',
-                        routerLink: ['/dashboards/saas']
                     }
                 ]
             }

@@ -32,8 +32,8 @@ export interface LoginResponse {
     providedIn: 'root'
 })
 export class AuthService {
-    //readonly apiUrl = 'http://10.9.0.234/PortalGST';
-    readonly apiUrl = 'https://localhost:44361';
+    readonly apiUrl = 'http://10.9.0.234/PortalGST2';
+    //readonly apiUrl = 'https://localhost:44361';
     private endpoint = '/api/Login';
     private tokenKey = 'auth_token';
     private userKey = 'auth_user';

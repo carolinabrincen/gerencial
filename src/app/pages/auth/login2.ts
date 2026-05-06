@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -52,7 +53,7 @@ import { MessageService } from 'primeng/api';
                     </div>
                 </div>
             </div>
-            <div [style]="{ backgroundImage: 'url(/demo/images/pages/fondo.jpeg)' }" class="hidden lg:flex flex-1 items-center justify-center bg-cover">
+            <div [style]="{ backgroundImage: 'url(' + baseHref + 'demo/images/pages/fondo.jpeg)' }" class="hidden lg:flex flex-1 items-center justify-center bg-cover">
                 
             </div>
         </div>
@@ -62,6 +63,8 @@ export class Login2 {
     password: string = '';
     usuario: string = '';
     isLoading: boolean = false;
+    private doc = inject(DOCUMENT);
+    baseHref = this.doc.querySelector('base')?.getAttribute('href') ?? '/';
 
     constructor(private authService: AuthService, private messageService: MessageService, private router: Router) {}
 
@@ -87,7 +90,7 @@ export class Login2 {
                 
                 // Redirigir al dashboard después de 1.5 segundos
                 setTimeout(() => {
-                    this.router.navigate(['/dashboards']);
+                    this.router.navigate(['/dashboards/indicadores']);
                 }, 1500);
             },
             error: (error) => {
