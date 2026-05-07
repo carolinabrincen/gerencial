@@ -571,15 +571,17 @@ export class DashboardIndicadores implements OnInit {
     footerIR8 = computed(() => {
         const data = this.dataIR8();
         if (!data.length) return null;
-        const totalIngreso = data.reduce((s: number, r: any) => s + (r.ingreso        ?? 0), 0);
-        const totalViajes  = data.reduce((s: number, r: any) => s + (r.viajesCargados ?? 0), 0);
-        const mesAntProm   = data.reduce((s: number, r: any) => s + (r.mesAnt         ?? 0), 0) / data.length;
+        const totalIngreso          = data.reduce((s: number, r: any) => s + (r.ingreso               ?? 0), 0);
+        const totalViajes           = data.reduce((s: number, r: any) => s + (r.viajesCargados        ?? 0), 0);
+        const totalMesAntIngreso    = data.reduce((s: number, r: any) => s + (r.mesAntIngreso         ?? 0), 0);
+        const totalMesAntViajes     = data.reduce((s: number, r: any) => s + (r.mesAntViajesCargados  ?? 0), 0);
+        const mesAnt = totalMesAntViajes > 0 ? totalMesAntIngreso / totalMesAntViajes : 0;
         return {
             udN: 'Total',
             ingreso:        totalIngreso,
             viajesCargados: totalViajes,
             ingrXViaje:     totalViajes > 0 ? totalIngreso / totalViajes : 0,
-            mesAnt:         mesAntProm,
+            mesAnt,
             pctIngreso:     1,
         };
     });
@@ -594,30 +596,34 @@ export class DashboardIndicadores implements OnInit {
     footerIR9 = computed(() => {
         const data = this.dataIR9();
         if (!data.length) return null;
-        const totalIngreso     = data.reduce((s: number, r: any) => s + (r.ingreso    ?? 0), 0);
-        const totalOperadores  = data.reduce((s: number, r: any) => s + (r.operadores ?? 0), 0);
-        const mesAntProm       = data.reduce((s: number, r: any) => s + (r.mesAnt     ?? 0), 0) / data.length;
+        const totalIngreso          = data.reduce((s: number, r: any) => s + (r.ingreso          ?? 0), 0);
+        const totalOperadores       = data.reduce((s: number, r: any) => s + (r.operadores       ?? 0), 0);
+        const totalMesAntIngreso    = data.reduce((s: number, r: any) => s + (r.mesAntIngreso    ?? 0), 0);
+        const totalMesAntOperadores = data.reduce((s: number, r: any) => s + (r.mesAntOperadores ?? 0), 0);
+        const mesAnt = totalMesAntOperadores > 0 ? totalMesAntIngreso / totalMesAntOperadores : 0;
         return {
             udN: 'Total',
             ingreso:     totalIngreso,
             operadores:  totalOperadores,
             ingrXUnidad: totalOperadores > 0 ? totalIngreso / totalOperadores : 0,
-            mesAnt:      mesAntProm,
+            mesAnt,
         };
     });
 
     footerIR10 = computed(() => {
         const data = this.dataIR10();
         if (!data.length) return null;
-        const totalIngreso = data.reduce((s: number, r: any) => s + (r.ingreso    ?? 0), 0);
-        const totalKms     = data.reduce((s: number, r: any) => s + (r.kmsTotales ?? 0), 0);
-        const mesAntProm   = data.reduce((s: number, r: any) => s + (r.mesAnt     ?? 0), 0) / data.length;
+        const totalIngreso          = data.reduce((s: number, r: any) => s + (r.ingreso          ?? 0), 0);
+        const totalKms              = data.reduce((s: number, r: any) => s + (r.kmsTotales       ?? 0), 0);
+        const totalMesAntIngreso    = data.reduce((s: number, r: any) => s + (r.mesAntIngreso    ?? 0), 0);
+        const totalMesAntKms        = data.reduce((s: number, r: any) => s + (r.mesAntKmsTotales ?? 0), 0);
+        const mesAnt = totalMesAntKms > 0 ? totalMesAntIngreso / totalMesAntKms : 0;
         return {
             udN: 'Total',
             ingreso:    totalIngreso,
             kmsTotales: totalKms,
             ingrXKm:    totalKms > 0 ? totalIngreso / totalKms : 0,
-            mesAnt:     mesAntProm,
+            mesAnt,
         };
     });
 
@@ -746,9 +752,11 @@ export class DashboardIndicadores implements OnInit {
         if (!data.length) return null;
         const totalKmsTotales   = data.reduce((s: number, r: any) => s + (r.kmsTotales  ?? 0), 0);
         const totalKmsCargados  = data.reduce((s: number, r: any) => s + (r.kmsCargados ?? 0), 0);
-        const kmsVacios         = totalKmsTotales > 0 ? (totalKmsTotales - totalKmsCargados) / totalKmsTotales : 0;
-        const mesAntProm        = data.reduce((s: number, r: any) => s + (r.mesAnt ?? 0), 0) / data.length;
-        return { udn: 'Total', kmsTotales: totalKmsTotales, kmsCargados: totalKmsCargados, kmsVacios, mesAnt: mesAntProm };
+        const kmsVacios              = totalKmsTotales > 0 ? (totalKmsTotales - totalKmsCargados) / totalKmsTotales : 0;
+        const totalMesAntKmsTotales  = data.reduce((s: number, r: any) => s + (r.mesAntKmsTotales  ?? 0), 0);
+        const totalMesAntKmsCargados = data.reduce((s: number, r: any) => s + (r.mesAntKmsCargados ?? 0), 0);
+        const mesAnt = totalMesAntKmsTotales > 0 ? (totalMesAntKmsTotales - totalMesAntKmsCargados) / totalMesAntKmsTotales : 0;
+        return { udn: 'Total', kmsTotales: totalKmsTotales, kmsCargados: totalKmsCargados, kmsVacios, mesAnt };
     });
 
     footerKmsXViaje = computed(() => {
@@ -756,9 +764,11 @@ export class DashboardIndicadores implements OnInit {
         if (!data.length) return null;
         const totalKmsCargados = data.reduce((s: number, r: any) => s + (r.kmsCargados    ?? 0), 0);
         const totalViajes      = data.reduce((s: number, r: any) => s + (r.viajesCargados ?? 0), 0);
-        const kmsXViaje        = totalViajes > 0 ? totalKmsCargados / totalViajes : 0;
-        const mesAntProm       = data.reduce((s: number, r: any) => s + (r.mesAnt ?? 0), 0) / data.length;
-        return { udn: 'Total', kmsCargados: totalKmsCargados, viajesCargados: totalViajes, kmsXViaje, mesAnt: mesAntProm };
+        const kmsXViaje             = totalViajes > 0 ? totalKmsCargados / totalViajes : 0;
+        const totalMesAntKms        = data.reduce((s: number, r: any) => s + (r.mesAntKmsCargados      ?? 0), 0);
+        const totalMesAntViajes     = data.reduce((s: number, r: any) => s + (r.mesAntViajesCargados   ?? 0), 0);
+        const mesAnt = totalMesAntViajes > 0 ? totalMesAntKms / totalMesAntViajes : 0;
+        return { udn: 'Total', kmsCargados: totalKmsCargados, viajesCargados: totalViajes, kmsXViaje, mesAnt };
     });
 
     footerOpActivos = computed(() => {
@@ -767,8 +777,10 @@ export class DashboardIndicadores implements OnInit {
         const totalViajes = data.reduce((s: number, r: any) => s + (r.viajesCargados ?? 0), 0);
         const totalOperadores = data.reduce((s: number, r: any) => s + (r.operadores ?? 0), 0);
         const promXOp = totalOperadores > 0 ? totalViajes / totalOperadores : 0;
-        const mesAntProm = data.reduce((s: number, r: any) => s + (r.mesAnt ?? 0), 0) / data.length;
-        return { udn: 'Total', viajesCargados: totalViajes, operadores: totalOperadores, vjesPromOp: promXOp, mesAnt: mesAntProm };
+        const totalMesAntViajes = data.reduce((s: number, r: any) => s + (r.mesAntViajes      ?? 0), 0);
+        const totalMesAntOps    = data.reduce((s: number, r: any) => s + (r.mesAntOperadores  ?? 0), 0);
+        const mesAnt = totalMesAntOps > 0 ? totalMesAntViajes / totalMesAntOps : 0;
+        return { udn: 'Total', viajesCargados: totalViajes, operadores: totalOperadores, vjesPromOp: promXOp, mesAnt };
     });
 
     colsOpActivos: ColumnDef[] = [
@@ -878,62 +890,258 @@ export class DashboardIndicadores implements OnInit {
     }
 
     async printPDF(): Promise<void> {
-        console.log('[PDF] Iniciando...');
-        const wrappers: HTMLElement[] = [];
-        const saved: string[] = [];
         try {
-            const { toJpeg } = await import('html-to-image');
-            const { jsPDF } = await import('jspdf');
-            console.log('[PDF] Librerías cargadas');
+            const { jsPDF }             = await import('jspdf');
+            const { default: autoTable } = await import('jspdf-autotable');
 
-            const container = this.cardsContainer.nativeElement;
-            const cardEls = Array.from(container.children) as HTMLElement[];
-            console.log('[PDF] Cards encontradas:', cardEls.length);
+            /* ── helpers ─────────────────────────────────────── */
+            const fmtVal = (value: any, format?: string): string => {
+                if (value === null || value === undefined) return '';
+                if (format === 'percent')       return (Number(value) * 100).toFixed(1) + '%';
+                if (format === 'percent-int')   return Math.round(Number(value) * 100) + '%';
+                if (format === 'decimal')       return typeof value === 'number' ? value.toFixed(2) : String(value);
+                if (format === 'integer')       return typeof value === 'number' ? Math.floor(value).toLocaleString('es-MX') : String(value);
+                if (format === 'currency')      return typeof value === 'number' ? value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(value);
+                if (format === 'currency-int')  return typeof value === 'number' ? '$' + Math.round(value).toLocaleString('es-MX') : String(value);
+                if (format === 'currency-dec1') return typeof value === 'number' ? '$' + value.toLocaleString('es-MX', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : String(value);
+                return String(value);
+            };
 
-            Array.from(document.querySelectorAll('.p-datatable-wrapper') as NodeListOf<HTMLElement>)
-                .forEach(w => { wrappers.push(w); saved.push(w.style.cssText); w.style.maxHeight = 'none'; w.style.overflow = 'visible'; });
-            console.log('[PDF] Wrappers expandidos:', wrappers.length);
+            const colAlign = (col: ColumnDef): 'left' | 'center' | 'right' => {
+                if (col.align) return col.align;
+                const numFmts = ['currency', 'currency-int', 'currency-dec1', 'integer', 'decimal', 'percent', 'percent-int'];
+                return numFmts.includes(col.format ?? '') ? 'right' : 'left';
+            };
 
-            const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-            const pageW = pdf.internal.pageSize.getWidth();
-            const pageH = pdf.internal.pageSize.getHeight();
-            const margin = 5;
-            const colW = (pageW - margin * 3) / 2;
+            /* ── layout ──────────────────────────────────────── */
+            const pdf   = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const pageW = pdf.internal.pageSize.getWidth();   // 297
+            const pageH = pdf.internal.pageSize.getHeight();  // 210
+            const M     = 6;
+            const GAP   = 4;
+            const colW  = (pageW - M * 2 - GAP) / 2;         // ~140.5 mm
 
-            const captureOptions = {
-                quality: 0.85,
-                backgroundColor: '#ffffff',
-                pixelRatio: 1.5,
-                skipFonts: true,
-                filter: (node: Element) => {
-                    const tag = (node.tagName || '').toLowerCase();
-                    return tag !== 'link' && tag !== 'script';
+            /* ── colors ──────────────────────────────────────── */
+            const BLUE:  [number,number,number] = [59,  130, 246];
+            const WHITE: [number,number,number] = [255, 255, 255];
+            const LGRAY: [number,number,number] = [248, 249, 250];
+            const FOOT:  [number,number,number] = [226, 232, 240];
+            const GREEN: [number,number,number] = [22,  163, 74 ];
+            const RED:   [number,number,number] = [220, 38,  38 ];
+            const DARK:  [number,number,number] = [30,  30,  30 ];
+            const MGRAY: [number,number,number] = [100, 100, 100];
+
+            /* ── card definitions ────────────────────────────── */
+            const cards: any[] = [
+                {
+                    title: `Viajes Cargados del periodo ${this.selectedPeriodo}`,
+                    subtitleLabel: 'Viaje Promedio por Operador',
+                    subtitle: this.subtitleOpActivos(),
+                    trend: this.trendOpActivos(),
+                    columns: this.colsOpActivos,
+                    data: this.dataOpActivos(),
+                    footer: this.footerOpActivos(),
+                },
+                {
+                    title: `Kilómetros por Viaje Cargado del periodo ${this.selectedPeriodo}`,
+                    subtitleLabel: 'Kilómetros Cargados por Viaje',
+                    subtitle: this.subtitleKmsXViaje(),
+                    trend: this.trendKmsXViaje(),
+                    columns: this.colsKmsXViaje,
+                    data: this.dataKmsXViaje(),
+                    footer: this.footerKmsXViaje(),
+                },
+                {
+                    title: `Kilómetros Vacíos del periodo ${this.selectedPeriodo}`,
+                    subtitleLabel: '% de Kilómetros Vacíos',
+                    subtitle: this.subtitleKmsVacios(),
+                    trend: this.trendKmsVacios(),
+                    columns: this.colsKmsVacios,
+                    data: this.dataKmsVacios(),
+                    footer: this.footerKmsVacios(),
+                },
+                {
+                    title: `Viajes Cargados por Mes del periodo ${this.selectedPeriodo}`,
+                    subtitleLabel: 'Viaje por Día',
+                    subtitle: this.subtitleViajesMes(),
+                    trend: this.trendViajesMes(),
+                    columns: this.colsViajesMes,
+                    data: this.dataViajesMes(),
+                    footer: this.footerViajesMes(),
+                },
+                {
+                    title: `Disponibilidad por Mes del periodo ${this.selectedPeriodo}`,
+                    subtitleLabel: 'Disponibilidad Mensual',
+                    subtitle: this.subtitleDisponibilidad(),
+                    trend: this.trendDisponibilidad(),
+                    columns: this.colsDisponibilidad,
+                    data: this.dataDisponibilidad(),
+                    footer: this.footerDisponibilidad(),
+                },
+                {
+                    title: `Kilómetros del Mes del periodo ${this.selectedPeriodo}`,
+                    kpis: this.kpisIR6(),
+                    columns:  this.colsIR6,
+                    data:     this.dataIR6(),
+                    footer:   this.footerIR6(),
+                    footerExtra: this.footerIR6Pct(),
+                    columns2: this.colsIR7,
+                    data2:    this.dataIR7(),
+                    footer2:  this.footerIR7(),
+                    footer2Extra: this.footerIR7Pct(),
+                    footerOnly2: true,
+                },
+                {
+                    title: `Ingreso por Viaje Cargado del periodo ${this.selectedPeriodo}`,
+                    subtitleLabel: 'Ingreso por Viaje Cargado',
+                    subtitle: this.subtitleIR8(),
+                    trend: this.trendIR8(),
+                    columns: this.colsIR8,
+                    data: this.dataIR8WithPct(),
+                    footer: this.footerIR8(),
+                },
+                {
+                    title: `Ingreso por Unidad del periodo ${this.selectedPeriodo}`,
+                    subtitleLabel: 'Ingreso por Unidad',
+                    subtitle: this.subtitleIR9(),
+                    trend: this.trendIR9(),
+                    columns: this.colsIR9,
+                    data: this.dataIR9(),
+                    footer: this.footerIR9(),
+                },
+                {
+                    title: `Ingreso por Km del periodo ${this.selectedPeriodo}`,
+                    subtitleLabel: 'Ingreso por Kilómetro',
+                    subtitle: this.subtitleIR10(),
+                    trend: this.trendIR10(),
+                    columns: this.colsIR10,
+                    data: this.dataIR10(),
+                    footer: this.footerIR10(),
+                },
+            ];
+
+            /* ── render helpers ──────────────────────────────── */
+            const drawTable = (
+                cols: ColumnDef[], rows: any[],
+                footer: any, footerExtra: any,
+                x: number, startY: number
+            ): number => {
+                const rightMargin = pageW - (x + colW - 2);
+                const colStyles: Record<number, any> = {};
+                cols.forEach((c, i) => { colStyles[i] = { halign: colAlign(c) }; });
+
+                const foot: string[][] = [];
+                if (footer)      foot.push(cols.map(c => fmtVal(footer[c.field],      c.format)));
+                if (footerExtra) foot.push(cols.map(c => fmtVal(footerExtra[c.field], c.format)));
+
+                autoTable(pdf, {
+                    head: [cols.map(c => c.header)],
+                    body: rows.map(r => cols.map(c => fmtVal(r[c.field], c.format))),
+                    foot,
+                    startY,
+                    margin: { left: x + 2, right: rightMargin, top: M, bottom: M },
+                    styles:           { fontSize: 7.5, cellPadding: { top: 1.5, bottom: 1.5, left: 2, right: 2 }, overflow: 'linebreak' },
+                    headStyles:       { fillColor: BLUE,  textColor: WHITE, fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: LGRAY },
+                    footStyles:       { fillColor: FOOT,  textColor: DARK,  fontStyle: 'bold' },
+                    columnStyles: colStyles,
+                    willDrawCell: (data: any) => {
+                        if (data.section === 'foot') {
+                            const col = cols[data.column.index];
+                            if (col) data.cell.styles.halign = colAlign(col);
+                            if (footerExtra && data.row.index === 1) {
+                                data.cell.styles.textColor = GREEN;
+                                data.cell.styles.fillColor = [240, 253, 244];
+                            }
+                        }
+                    },
+                });
+                return (pdf as any).lastAutoTable?.finalY ?? startY;
+            };
+
+            const renderCard = (card: any, colIdx: 0 | 1) => {
+                const x = M + colIdx * (colW + GAP);
+                let y = M;
+
+                // Card border
+                pdf.setFillColor(...WHITE);
+                pdf.setDrawColor(210, 214, 220);
+                pdf.roundedRect(x, y, colW, pageH - M * 2, 2, 2, 'FD');
+                y += 5;
+
+                // Title
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(9);
+                pdf.setTextColor(...DARK);
+                const titleLines: string[] = pdf.splitTextToSize(card.title, colW - 6);
+                pdf.text(titleLines, x + 3, y + 4);
+                y += titleLines.length * 4.5 + 4;
+
+                // Subtitle + trend
+                if (card.subtitleLabel && card.subtitle) {
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setFontSize(7);
+                    pdf.setTextColor(...MGRAY);
+                    pdf.text(card.subtitleLabel, x + colW / 2, y, { align: 'center' });
+                    y += 5;
+
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setFontSize(14);
+                    pdf.setTextColor(...BLUE);
+                    pdf.text(card.subtitle, x + colW / 2, y, { align: 'center' });
+                    y += 7;
+
+                    if (card.trend === 'up' || card.trend === 'down') {
+                        const r = 3.5;
+                        pdf.setFillColor(...(card.trend === 'up' ? GREEN : RED));
+                        pdf.circle(x + colW / 2, y + r, r, 'F');
+                        y += r * 2 + 4;
+                    }
+                    y += 2;
+                }
+
+                // KPI boxes (card 6)
+                if (card.kpis?.length) {
+                    const kpiW = (colW - 6) / card.kpis.length;
+                    (card.kpis as KpiDef[]).forEach((kpi, ki) => {
+                        const kx = x + 3 + ki * kpiW;
+                        pdf.setFillColor(248, 248, 248);
+                        pdf.setDrawColor(210, 214, 220);
+                        pdf.roundedRect(kx, y, kpiW - 1, 15, 1, 1, 'FD');
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.setFontSize(6);
+                        pdf.setTextColor(...MGRAY);
+                        pdf.text(kpi.label, kx + (kpiW - 1) / 2, y + 5, { align: 'center' });
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(...BLUE);
+                        pdf.text(kpi.value, kx + (kpiW - 1) / 2, y + 11, { align: 'center' });
+                    });
+                    y += 18;
+                }
+
+                // Main table
+                y = drawTable(card.columns, card.data, card.footer, card.footerExtra, x, y) + 3;
+
+                // Second table (card 6)
+                if (card.columns2?.length) {
+                    if (card.footerOnly2) {
+                        drawTable(card.columns2, [], card.footer2, card.footer2Extra, x, y);
+                    } else {
+                        drawTable(card.columns2, card.data2 ?? [], card.footer2, card.footer2Extra, x, y);
+                    }
                 }
             };
 
-            for (let i = 0; i < cardEls.length; i++) {
-                const col = i % 2;
-                if (col === 0 && i > 0) pdf.addPage();
-
-                console.log(`[PDF] Capturando card ${i + 1}/${cardEls.length}...`);
-                const imgData = await toJpeg(cardEls[i], captureOptions);
-                console.log(`[PDF] Card ${i + 1} capturada, bytes:`, imgData.length);
-
-                const img = new Image();
-                img.src = imgData;
-                await new Promise<void>((resolve, reject) => { img.onload = () => resolve(); img.onerror = () => reject(new Error('img load failed')); });
-
-                const imgH = Math.min((img.height / img.width) * colW, pageH - margin * 2);
-                pdf.addImage(imgData, 'JPEG', margin + col * (colW + margin), margin, colW, imgH);
-                console.log(`[PDF] Card ${i + 1} agregada al PDF.`);
-            }
+            /* ── render all cards ────────────────────────────── */
+            cards.forEach((card, i) => {
+                if (i % 2 === 0 && i > 0) pdf.addPage();
+                renderCard(card, (i % 2) as 0 | 1);
+            });
 
             pdf.save(`Indicadores_${this.selectedPeriodo}.pdf`);
-            console.log('[PDF] PDF guardado.');
         } catch (err) {
             console.error('[PDF] Error:', err);
-        } finally {
-            wrappers.forEach((w, i) => { w.style.cssText = saved[i]; });
         }
     }
 }

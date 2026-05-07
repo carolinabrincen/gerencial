@@ -37,6 +37,7 @@
                     },
                     "configurations": {
                         "production": {
+                            "baseHref": "/GerGST/",
                             "budgets": [
                                 {
                                     "type": "initial",
