@@ -25,6 +25,8 @@ export interface IndicadoresResumenResponse {
         iR8IngrViajeCargadoDTO: any[];
         iR9IngrXUnidadDTO: any[];
         iR10IngrXKmDTO: any[];
+        totalMesAntViajesCargados: number;
+        totalMesAntOperadores: number;
     };
 }
 

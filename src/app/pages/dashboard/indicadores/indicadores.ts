@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
-import { ChartModule } from 'primeng/chart';
+import { ChartModule, UIChart } from 'primeng/chart';
 import { dataUDN } from '@/app/types/data-udn';
 import { dataOperaciones } from '@/app/types/data-operaciones';
 import { dataPeriodos } from '@/app/types/data-periodos';
@@ -125,7 +125,7 @@ import { dataPeriodos } from '@/app/types/data-periodos';
             <!-- Card 6: Kilómetros del Mes — dos tablas -->
             <div class="col-span-12 md:col-span-6 mb-8">
                 <app-grid-card
-                    [title]="'Kilómetros del Mes del periodo ' + selectedPeriodo"
+                    [title]="'Kilómetros del periodo ' + selectedPeriodo"
                     [kpis]="kpisIR6()"
                     [footerOnly2]="true"
                     [columns]="colsIR6"
@@ -186,11 +186,12 @@ import { dataPeriodos } from '@/app/types/data-periodos';
             [resizable]="false"
             [style]="dialogStyle"
             [header]="'Detalle Disponibilidad — ' + (selectedDisponibilidadRow?.mes ?? '')"
+            (onShow)="onDialogShow()"
         >
             <div class="grid grid-cols-12 gap-4">
                 <div class="col-span-12" *ngIf="chartDataDetalle">
-                    
-                    <p-chart type="line" [data]="chartDataDetalle" [options]="chartOptionsDetalle" [plugins]="chartPluginsDetalle" height="220px" />
+
+                    <p-chart #chartDetalle type="line" [data]="chartDataDetalle" [options]="chartOptionsDetalle" [plugins]="chartPluginsDetalle" height="220px" />
                 </div>
                 <div class="col-span-12">
                     <div class="flex items-center justify-between mb-2">
@@ -199,7 +200,7 @@ import { dataPeriodos } from '@/app/types/data-periodos';
                     </div>
                     <div class="overflow-x-auto">
                     <p-table
-                        [value]="selectedDisponibilidadRow?.detalleMensual ?? []"
+                        [value]="detalleMensualDialogo"
                         [tableStyle]="{ 'font-size': '0.875rem' }"
                         styleClass="p-datatable-sm"
                     >
@@ -209,7 +210,8 @@ import { dataPeriodos } from '@/app/types/data-periodos';
                             </tr>
                         </ng-template>
                         <ng-template #body let-row>
-                            <tr>
+                            <tr [style.color]="row.clasificacion?.toLowerCase() === 'operando' ? '#16a34a' : null"
+                                [style.font-weight]="row.clasificacion?.toLowerCase() === 'operando' ? '600' : null">
                                 <td *ngFor="let col of colsDetalleMensual" [style.font-size]="isDayCol(col) ? '0.75rem' : null" style="text-align:center">{{ row[col.field] ?? '' }}</td>
                             </tr>
                         </ng-template>
@@ -237,6 +239,7 @@ import { dataPeriodos } from '@/app/types/data-periodos';
 })
 export class DashboardIndicadores implements OnInit {
     @ViewChild('cardsContainer') cardsContainer!: ElementRef<HTMLElement>;
+    @ViewChild('chartDetalle') chartDetalle?: UIChart;
 
     periodosOptions = dataPeriodos;
     selectedPeriodo: string = '';
@@ -268,7 +271,7 @@ export class DashboardIndicadores implements OnInit {
     }
 
     abCellColor(row: any, col: ColumnDef): string | null {
-        const tipo = String(row[Object.keys(row)[0]] ?? '').toLowerCase();
+        const tipo = String(row.clasificacion ?? '').toLowerCase();
         const val  = Number(row[col.field]);
         if (isNaN(val) || val <= 0) return null;
         if (tipo === 'altas') return '#16a34a';
@@ -277,13 +280,13 @@ export class DashboardIndicadores implements OnInit {
     }
 
     abCellWeight(row: any, col: ColumnDef): string | null {
-        const tipo = String(row[Object.keys(row)[0]] ?? '').toLowerCase();
+        const tipo = String(row.clasificacion ?? '').toLowerCase();
         const val  = Number(row[col.field]);
         return (tipo === 'altas' || tipo === 'bajas') && !isNaN(val) && val > 0 ? '600' : null;
     }
 
     abCellFontSize(row: any, col: ColumnDef): string {
-        const tipo = String(row[Object.keys(row)[0]] ?? '').toLowerCase();
+        const tipo = String(row.clasificacion ?? '').toLowerCase();
         const val  = Number(row[col.field]);
         const highlighted = (tipo === 'altas' || tipo === 'bajas') && !isNaN(val) && val > 0;
         if (this.isDayCol(col)) return highlighted ? 'calc(0.75rem + 1pt)' : '0.75rem';
@@ -294,18 +297,17 @@ export class DashboardIndicadores implements OnInit {
         const data = this.selectedDisponibilidadRow?.detalleMensual;
         if (!data?.length) return null;
         const keys = Object.keys(data[0]);
-        const firstKey = keys[0];
-        const activosRow   = data.find((r: any) => String(r[firstKey]).toLowerCase() === 'activos');
-        const plantillaRow = data.find((r: any) => String(r[firstKey]).toLowerCase() === 'plantilla');
+        const activosRow   = data.find((r: any) => String(r.clasificacion).toLowerCase() === 'activos');
+        const plantillaRow = data.find((r: any) => String(r.clasificacion).toLowerCase() === 'plantilla');
         if (!activosRow || !plantillaRow) return null;
         const result: Record<string, any> = {};
-        keys.forEach((key, i) => {
-            if (i === 0) {
+        keys.forEach(key => {
+            if (key === 'clasificacion') {
                 result[key] = '% Disp.';
             } else {
                 const activos   = Number(activosRow[key])   || 0;
                 const plantilla = Number(plantillaRow[key]) || 0;
-                result[key] = plantilla > 0 ? Math.round((activos / plantilla) * 100) + '%' : '0%';
+                result[key] = plantilla > 0 ? Math.round((activos / plantilla) * 100) + '%' : '';
             }
         });
         return result;
@@ -316,9 +318,13 @@ export class DashboardIndicadores implements OnInit {
         if (!data?.length) return {};
         const keys = Object.keys(data[0]);
         const result: Record<string, any> = {};
-        keys.forEach((key, i) => {
-            const nums = data.map((r: any) => Number(r[key])).filter((v: number) => !isNaN(v));
-            result[key] = nums.length === data.length ? nums.reduce((s: number, v: number) => s + v, 0) : (i === 0 ? 'Total' : '');
+        keys.forEach(key => {
+            if (key === 'clasificacion') {
+                result[key] = 'Total';
+            } else {
+                const nums = data.map((r: any) => Number(r[key])).filter((v: number) => !isNaN(v));
+                result[key] = nums.length === data.length ? nums.reduce((s: number, v: number) => s + v, 0) : '';
+            }
         });
         return result;
     }
@@ -332,15 +338,35 @@ export class DashboardIndicadores implements OnInit {
         return { width: Math.floor(window.innerWidth * 0.97) + 'px' };
     }
 
+    get detalleMensualDialogo(): any[] {
+        const data = this.selectedDisponibilidadRow?.detalleMensual;
+        if (!data?.length) return [];
+        const plantilla = data.find((r: any) => String(r.clasificacion).toLowerCase() === 'plantilla');
+        const operando  = data.find((r: any) => String(r.clasificacion).toLowerCase() === 'operando');
+        const activos   = data.find((r: any) => String(r.clasificacion).toLowerCase() === 'activos');
+        const rest      = data.filter((r: any) => {
+            const c = String(r.clasificacion).toLowerCase();
+            return c !== 'plantilla' && c !== 'operando' && c !== 'activos';
+        });
+        const ceilTotal = (r: any) => {
+            if (!r) return r;
+            const num = Number(r.total);
+            return isNaN(num) ? r : { ...r, total: Math.ceil(num) };
+        };
+        return [plantilla, operando, activos, ...rest].filter(Boolean).map(ceilTotal);
+    }
+
     get colsDetalleMensual(): ColumnDef[] {
         const data = this.selectedDisponibilidadRow?.detalleMensual;
         if (!data?.length) return [];
         const keys = Object.keys(data[0]);
-        const firstKey = keys[0];
-        const plantillaRow = data.find((r: any) => String(r[firstKey]).toLowerCase() === 'plantilla');
-        return keys
-            .filter(key => key === firstKey || !plantillaRow || (Number(plantillaRow[key]) || 0) > 0)
-            .map(key => ({ field: key, header: this.toColHeader(key) }));
+        const plantillaRow = data.find((r: any) => String(r.clasificacion).toLowerCase() === 'plantilla');
+        const ordered = [
+            'clasificacion',
+            ...keys.filter(k => /^dia\d+$/i.test(k) && (!plantillaRow || (Number(plantillaRow[k]) || 0) > 0)),
+            'total',
+        ].filter(k => keys.includes(k));
+        return ordered.map(key => ({ field: key, header: this.toColHeader(key) }));
     }
 
     get colsAltasBajas(): ColumnDef[] {
@@ -355,9 +381,8 @@ export class DashboardIndicadores implements OnInit {
         const data = row?.detalleMensual;
         if (!data?.length) return null;
         const keys = Object.keys(data[0]);
-        const firstKey = keys[0];
-        const activosRow   = data.find((r: any) => String(r[firstKey]).toLowerCase() === 'activos');
-        const plantillaRow = data.find((r: any) => String(r[firstKey]).toLowerCase() === 'plantilla');
+        const activosRow   = data.find((r: any) => String(r.clasificacion).toLowerCase() === 'activos');
+        const plantillaRow = data.find((r: any) => String(r.clasificacion).toLowerCase() === 'plantilla');
         if (!activosRow || !plantillaRow) return null;
         const dayKeys = keys.filter(k => /^dia\d+$/i.test(k) && (Number(plantillaRow[k]) || 0) > 0);
         if (!dayKeys.length) return null;
@@ -418,7 +443,7 @@ export class DashboardIndicadores implements OnInit {
 
     exportDetalleMensual(): void {
         const cols = this.colsDetalleMensual;
-        const data = this.selectedDisponibilidadRow?.detalleMensual ?? [];
+        const data = this.detalleMensualDialogo;
         const pct  = this.porcentajeDetalleMensual;
         const ab   = this.selectedDisponibilidadRow?.altasBajas ?? [];
 
@@ -452,6 +477,10 @@ export class DashboardIndicadores implements OnInit {
         this.dialogVisible = true;
     }
 
+    onDialogShow(): void {
+        setTimeout(() => this.chartDetalle?.refresh(), 0);
+    }
+
     dataOpActivos = signal<any[]>([]);
     dataKmsXViaje = signal<any[]>([]);
     dataKmsVacios = signal<any[]>([]);
@@ -462,6 +491,8 @@ export class DashboardIndicadores implements OnInit {
     dataIR8 = signal<any[]>([]);
     dataIR9 = signal<any[]>([]);
     dataIR10 = signal<any[]>([]);
+    totalMesAntViajesCargados = signal<number>(0);
+    totalMesAntOperadores = signal<number>(0);
 
     colsIR6: ColumnDef[] = [
         { field: 'udN',        header: 'UDN' },
@@ -571,10 +602,10 @@ export class DashboardIndicadores implements OnInit {
     footerIR8 = computed(() => {
         const data = this.dataIR8();
         if (!data.length) return null;
-        const totalIngreso          = data.reduce((s: number, r: any) => s + (r.ingreso               ?? 0), 0);
-        const totalViajes           = data.reduce((s: number, r: any) => s + (r.viajesCargados        ?? 0), 0);
-        const totalMesAntIngreso    = data.reduce((s: number, r: any) => s + (r.mesAntIngreso         ?? 0), 0);
-        const totalMesAntViajes     = data.reduce((s: number, r: any) => s + (r.mesAntViajesCargados  ?? 0), 0);
+        const totalIngreso          = data.reduce((s: number, r: any) => s + (r.ingreso        ?? 0), 0);
+        const totalViajes           = data.reduce((s: number, r: any) => s + (r.viajesCargados ?? 0), 0);
+        const totalMesAntIngreso    = data.reduce((s: number, r: any) => s + (r.mesAntIngreso  ?? 0), 0);
+        const totalMesAntViajes     = this.totalMesAntViajesCargados();
         const mesAnt = totalMesAntViajes > 0 ? totalMesAntIngreso / totalMesAntViajes : 0;
         return {
             udN: 'Total',
@@ -596,10 +627,10 @@ export class DashboardIndicadores implements OnInit {
     footerIR9 = computed(() => {
         const data = this.dataIR9();
         if (!data.length) return null;
-        const totalIngreso          = data.reduce((s: number, r: any) => s + (r.ingreso          ?? 0), 0);
-        const totalOperadores       = data.reduce((s: number, r: any) => s + (r.operadores       ?? 0), 0);
-        const totalMesAntIngreso    = data.reduce((s: number, r: any) => s + (r.mesAntIngreso    ?? 0), 0);
-        const totalMesAntOperadores = data.reduce((s: number, r: any) => s + (r.mesAntOperadores ?? 0), 0);
+        const totalIngreso          = data.reduce((s: number, r: any) => s + (r.ingreso       ?? 0), 0);
+        const totalOperadores       = data.reduce((s: number, r: any) => s + (r.operadores    ?? 0), 0);
+        const totalMesAntIngreso    = data.reduce((s: number, r: any) => s + (r.mesAntIngreso ?? 0), 0);
+        const totalMesAntOperadores = this.totalMesAntOperadores();
         const mesAnt = totalMesAntOperadores > 0 ? totalMesAntIngreso / totalMesAntOperadores : 0;
         return {
             udN: 'Total',
@@ -774,12 +805,16 @@ export class DashboardIndicadores implements OnInit {
     footerOpActivos = computed(() => {
         const data = this.dataOpActivos();
         if (!data.length) return null;
-        const totalViajes = data.reduce((s: number, r: any) => s + (r.viajesCargados ?? 0), 0);
-        const totalOperadores = data.reduce((s: number, r: any) => s + (r.operadores ?? 0), 0);
+        const totalViajes     = data.reduce((s: number, r: any) => s + (r.viajesCargados ?? 0), 0);
+        const totalOperadores = data.reduce((s: number, r: any) => s + (r.operadores     ?? 0), 0);
         const promXOp = totalOperadores > 0 ? totalViajes / totalOperadores : 0;
-        const totalMesAntViajes = data.reduce((s: number, r: any) => s + (r.mesAntViajes      ?? 0), 0);
-        const totalMesAntOps    = data.reduce((s: number, r: any) => s + (r.mesAntOperadores  ?? 0), 0);
-        const mesAnt = totalMesAntOps > 0 ? totalMesAntViajes / totalMesAntOps : 0;
+        // Totales globales del mes anterior (incluye todas las UDNs, no sólo las del filtro).
+        // Fallback a suma de filas mientras el API no devuelva los campos globales.
+        const mesAntViajes = this.totalMesAntViajesCargados()
+            || data.reduce((s: number, r: any) => s + (r.mesAntViajes      ?? 0), 0);
+        const mesAntOps    = this.totalMesAntOperadores()
+            || data.reduce((s: number, r: any) => s + (r.mesAntOperadores  ?? 0), 0);
+        const mesAnt = mesAntOps > 0 ? mesAntViajes / mesAntOps : 0;
         return { udn: 'Total', viajesCargados: totalViajes, operadores: totalOperadores, vjesPromOp: promXOp, mesAnt };
     });
 
@@ -843,6 +878,8 @@ export class DashboardIndicadores implements OnInit {
                     this.dataIR8.set([]);
                     this.dataIR9.set([]);
                     this.dataIR10.set([]);
+                    this.totalMesAntViajesCargados.set(0);
+                    this.totalMesAntOperadores.set(0);
     
 
         const udnNames = this.selectedUDN
@@ -878,6 +915,8 @@ export class DashboardIndicadores implements OnInit {
                     this.dataIR8.set(response.data.iR8IngrViajeCargadoDTO ?? []);
                     this.dataIR9.set(response.data.iR9IngrXUnidadDTO ?? []);
                     this.dataIR10.set(response.data.iR10IngrXKmDTO ?? []);
+                    this.totalMesAntViajesCargados.set(response.data.totalMesAntViajesCargados ?? 0);
+                    this.totalMesAntOperadores.set(response.data.totalMesAntOperadores ?? 0);
                 } else {
                     console.warn('[Indicadores] responseCode inesperado:', response.responseCode, response.responseText);
                 }
@@ -918,8 +957,12 @@ export class DashboardIndicadores implements OnInit {
             const pageW = pdf.internal.pageSize.getWidth();   // 297
             const pageH = pdf.internal.pageSize.getHeight();  // 210
             const M     = 6;
-            const GAP   = 4;
-            const colW  = (pageW - M * 2 - GAP) / 2;         // ~140.5 mm
+            const CGAP  = 4;   // gap entre columnas
+            const RGAP  = 6;   // gap entre filas
+            const COLS  = 3;
+            const ROWS  = 2;
+            const colW  = (pageW - M * 2 - CGAP * (COLS - 1)) / COLS;   // ≈ 92.3 mm
+            const rowH  = (pageH - M * 2 - RGAP * (ROWS - 1)) / ROWS;   // = 96 mm
 
             /* ── colors ──────────────────────────────────────── */
             const BLUE:  [number,number,number] = [59,  130, 246];
@@ -979,7 +1022,7 @@ export class DashboardIndicadores implements OnInit {
                     footer: this.footerDisponibilidad(),
                 },
                 {
-                    title: `Kilómetros del Mes del periodo ${this.selectedPeriodo}`,
+                    title: `Kilómetros del periodo ${this.selectedPeriodo}`,
                     kpis: this.kpisIR6(),
                     columns:  this.colsIR6,
                     data:     this.dataIR6(),
@@ -1024,9 +1067,11 @@ export class DashboardIndicadores implements OnInit {
             const drawTable = (
                 cols: ColumnDef[], rows: any[],
                 footer: any, footerExtra: any,
-                x: number, startY: number
+                x: number, startY: number,
+                rowIdx: number
             ): number => {
                 const rightMargin = pageW - (x + colW - 2);
+                const slotBottom  = M + rowIdx * (rowH + RGAP) + rowH;
                 const colStyles: Record<number, any> = {};
                 cols.forEach((c, i) => { colStyles[i] = { halign: colAlign(c) }; });
 
@@ -1039,8 +1084,8 @@ export class DashboardIndicadores implements OnInit {
                     body: rows.map(r => cols.map(c => fmtVal(r[c.field], c.format))),
                     foot,
                     startY,
-                    margin: { left: x + 2, right: rightMargin, top: M, bottom: M },
-                    styles:           { fontSize: 7.5, cellPadding: { top: 1.5, bottom: 1.5, left: 2, right: 2 }, overflow: 'linebreak' },
+                    margin: { left: x + 2, right: rightMargin, top: M, bottom: Math.max(pageH - slotBottom + 1, M) },
+                    styles:           { fontSize: 7, cellPadding: { top: 1, bottom: 1, left: 1.5, right: 1.5 }, overflow: 'linebreak' },
                     headStyles:       { fillColor: BLUE,  textColor: WHITE, fontStyle: 'bold' },
                     alternateRowStyles: { fillColor: LGRAY },
                     footStyles:       { fillColor: FOOT,  textColor: DARK,  fontStyle: 'bold' },
@@ -1059,84 +1104,91 @@ export class DashboardIndicadores implements OnInit {
                 return (pdf as any).lastAutoTable?.finalY ?? startY;
             };
 
-            const renderCard = (card: any, colIdx: 0 | 1) => {
-                const x = M + colIdx * (colW + GAP);
-                let y = M;
-
-                // Card border
-                pdf.setFillColor(...WHITE);
-                pdf.setDrawColor(210, 214, 220);
-                pdf.roundedRect(x, y, colW, pageH - M * 2, 2, 2, 'FD');
-                y += 5;
+            const renderCard = (card: any, colIdx: number, rowIdx: number) => {
+                const x     = M + colIdx * (colW + CGAP);
+                const slotY = M + rowIdx * (rowH + RGAP);
+                let y = slotY + 4;
 
                 // Title
                 pdf.setFont('helvetica', 'bold');
-                pdf.setFontSize(9);
+                pdf.setFontSize(8);
                 pdf.setTextColor(...DARK);
-                const titleLines: string[] = pdf.splitTextToSize(card.title, colW - 6);
-                pdf.text(titleLines, x + 3, y + 4);
-                y += titleLines.length * 4.5 + 4;
+                const titleLines: string[] = pdf.splitTextToSize(card.title, colW - 4);
+                pdf.text(titleLines, x + 2, y);
+                y += titleLines.length * 4 + 2;
 
                 // Subtitle + trend
                 if (card.subtitleLabel && card.subtitle) {
                     pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(7);
+                    pdf.setFontSize(6.5);
                     pdf.setTextColor(...MGRAY);
                     pdf.text(card.subtitleLabel, x + colW / 2, y, { align: 'center' });
-                    y += 5;
+                    y += 4;
 
                     pdf.setFont('helvetica', 'bold');
-                    pdf.setFontSize(14);
+                    pdf.setFontSize(12);
                     pdf.setTextColor(...BLUE);
                     pdf.text(card.subtitle, x + colW / 2, y, { align: 'center' });
-                    y += 7;
+                    y += 6;
 
                     if (card.trend === 'up' || card.trend === 'down') {
-                        const r = 3.5;
+                        const r = 3;
                         pdf.setFillColor(...(card.trend === 'up' ? GREEN : RED));
                         pdf.circle(x + colW / 2, y + r, r, 'F');
-                        y += r * 2 + 4;
+                        y += r * 2 + 3;
                     }
-                    y += 2;
+                    y += 1;
                 }
 
                 // KPI boxes (card 6)
                 if (card.kpis?.length) {
-                    const kpiW = (colW - 6) / card.kpis.length;
+                    const kpiW = (colW - 4) / card.kpis.length;
                     (card.kpis as KpiDef[]).forEach((kpi, ki) => {
-                        const kx = x + 3 + ki * kpiW;
+                        const kx = x + 2 + ki * kpiW;
                         pdf.setFillColor(248, 248, 248);
                         pdf.setDrawColor(210, 214, 220);
-                        pdf.roundedRect(kx, y, kpiW - 1, 15, 1, 1, 'FD');
+                        pdf.roundedRect(kx, y, kpiW - 1, 13, 1, 1, 'FD');
                         pdf.setFont('helvetica', 'normal');
-                        pdf.setFontSize(6);
+                        pdf.setFontSize(5.5);
                         pdf.setTextColor(...MGRAY);
-                        pdf.text(kpi.label, kx + (kpiW - 1) / 2, y + 5, { align: 'center' });
+                        pdf.text(kpi.label, kx + (kpiW - 1) / 2, y + 4.5, { align: 'center' });
                         pdf.setFont('helvetica', 'bold');
-                        pdf.setFontSize(10);
+                        pdf.setFontSize(9);
                         pdf.setTextColor(...BLUE);
-                        pdf.text(kpi.value, kx + (kpiW - 1) / 2, y + 11, { align: 'center' });
+                        pdf.text(kpi.value, kx + (kpiW - 1) / 2, y + 10, { align: 'center' });
                     });
-                    y += 18;
+                    y += 15;
                 }
 
                 // Main table
-                y = drawTable(card.columns, card.data, card.footer, card.footerExtra, x, y) + 3;
+                y = drawTable(card.columns, card.data, card.footer, card.footerExtra, x, y, rowIdx) + 2;
 
                 // Second table (card 6)
                 if (card.columns2?.length) {
                     if (card.footerOnly2) {
-                        drawTable(card.columns2, [], card.footer2, card.footer2Extra, x, y);
+                        drawTable(card.columns2, [], card.footer2, card.footer2Extra, x, y, rowIdx);
                     } else {
-                        drawTable(card.columns2, card.data2 ?? [], card.footer2, card.footer2Extra, x, y);
+                        drawTable(card.columns2, card.data2 ?? [], card.footer2, card.footer2Extra, x, y, rowIdx);
                     }
                 }
             };
 
             /* ── render all cards ────────────────────────────── */
             cards.forEach((card, i) => {
-                if (i % 2 === 0 && i > 0) pdf.addPage();
-                renderCard(card, (i % 2) as 0 | 1);
+                const cardPos = i % 6;
+                const colIdx  = cardPos % COLS;
+                const rowIdx  = Math.floor(cardPos / COLS);
+
+                if (i > 0 && cardPos === 0) pdf.addPage();
+
+                if (cardPos === COLS) {
+                    const sepY = M + rowH + RGAP / 2;
+                    pdf.setDrawColor(220, 220, 220);
+                    pdf.setLineWidth(0.3);
+                    pdf.line(M, sepY, pageW - M, sepY);
+                }
+
+                renderCard(card, colIdx, rowIdx);
             });
 
             pdf.save(`Indicadores_${this.selectedPeriodo}.pdf`);
