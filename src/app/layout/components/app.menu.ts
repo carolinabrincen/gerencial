@@ -45,6 +45,28 @@ export class AppMenu implements OnInit {
                         routerLink: ['/dashboards/indicadores']
                     }
                 ]
+            },
+            {
+                label: 'Tarifas',
+                icon: 'pi pi-dollar',
+                path: '/tarifas',
+                items: [
+                    {
+                        label: 'Comité mensual',
+                        icon: 'pi pi-fw pi-desktop',
+                        routerLink: ['/tarifas/comite']
+                    },
+                    {
+                        label: 'Resumen por ruta',
+                        icon: 'pi pi-fw pi-map',
+                        routerLink: ['/tarifas/rutas']
+                    },
+                    {
+                        label: 'Ejecuciones',
+                        icon: 'pi pi-fw pi-history',
+                        routerLink: ['/tarifas/ejecuciones']
+                    }
+                ]
             }
         ];
     }

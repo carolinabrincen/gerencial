@@ -13,6 +13,11 @@ export const appRoutes: Routes = [
                 loadChildren: () => import('@/app/pages/dashboard/dashboard.routes')
             },
             {
+                path: 'tarifas',
+                data: { breadcrumb: 'Tarifas' },
+                loadChildren: () => import('@/app/pages/tarifas/tarifas.routes')
+            },
+            {
                 path: 'uikit',
                 data: { breadcrumb: 'UI Kit' },
                 loadChildren: () => import('@/app/pages/uikit/uikit.routes')
